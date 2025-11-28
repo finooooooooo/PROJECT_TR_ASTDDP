@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}POS Cashier{% endblock %}
+
+{% block content %}
+<!-- Left: Product Grid -->
+<div class="flex-1 flex flex-col bg-slate-100 overflow-hidden">
+    <header class="bg-white shadow p-4 flex justify-between items-center z-10">
+        <h1 class="text-2xl font-bold text-slate-800">Cashier</h1>
+        <div class="flex items-center gap-4">
+            <span class="text-slate-600 font-medium">{{ g.user.username | title }}</span>
+            <a href="{{ url_for('auth.logout') }}" class="text-red-500 font-bold hover:underline">Logout</a>
+        </div>
+    </header>
+
+    <!-- Filter/Search could go here -->
+
+    <div class="flex-1 overflow-y-auto p-6">
+        <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <!-- Products injected by JS -->
+            <div class="animate-pulse bg-white h-48 rounded shadow"></div>
+            <div class="animate-pulse bg-white h-48 rounded shadow"></div>
+            <div class="animate-pulse bg-white h-48 rounded shadow"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Right: Cart Sidebar -->
+<div class="w-96 bg-white shadow-2xl flex flex-col z-20 border-l">
+    <div class="p-4 border-b bg-slate-50">
+        <h2 class="text-xl font-bold text-slate-800">Current Order</h2>
+    </div>
+
+    <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-4">
+        <!-- Cart Items injected by JS -->
+        <p class="text-gray-500 text-center mt-10">Cart is empty</p>
+    </div>
+
+    <div class="p-4 bg-slate-50 border-t space-y-2">
+        <div class="flex justify-between text-slate-600">
+            <span>Subtotal</span>
+            <span id="summary-subtotal">Rp 0</span>
+        </div>
+        <div class="flex justify-between text-slate-600">
+            <span>Tax (10%)</span>
+            <span id="summary-tax">Rp 0</span>
+        </div>
+        <div class="flex justify-between text-2xl font-bold text-slate-900 pt-2 border-t border-slate-200">
+            <span>Total</span>
+            <span id="summary-total">Rp 0</span>
+        </div>
+
+        <button onclick="openPaymentModal()" id="btn-pay" disabled class="w-full mt-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg shadow transition">
+            Process Payment
+        </button>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50 backdrop-blur-sm">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="bg-slate-800 p-4 text-white flex justify-between items-center">
+            <h2 class="text-xl font-bold">Payment</h2>
+            <button onclick="closePaymentModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+        </div>
+
+        <div class="p-6">
+            <div class="flex gap-2 mb-6 bg-slate-100 p-1 rounded-lg">
+                <button onclick="setPaymentMethod('cash')" id="btn-cash" class="flex-1 py-2 rounded-md font-bold text-sm transition bg-white shadow text-blue-600">
+                    CASH
+                </button>
+                <button onclick="setPaymentMethod('qris')" id="btn-qris" class="flex-1 py-2 rounded-md font-bold text-sm transition text-slate-500 hover:bg-white/50">
+                    QRIS
+                </button>
+            </div>
+
+            <div class="text-center mb-6">
+                <p class="text-slate-500 text-sm uppercase tracking-wide">Total Amount</p>
+                <p id="modal-total" class="text-4xl font-bold text-slate-800">Rp 0</p>
+            </div>
+
+            <!-- Cash View -->
+            <div id="view-cash" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Cash Received</label>
+                    <input type="number" id="cash-input" class="w-full text-right text-2xl font-bold p-3 border-2 border-slate-300 rounded-lg focus:border-blue-500 outline-none" placeholder="0" oninput="calculateChange()">
+                </div>
+                <div class="flex justify-between items-center bg-green-50 p-3 rounded-lg border border-green-200">
+                    <span class="text-green-800 font-bold">Change</span>
+                    <span id="cash-change" class="text-xl font-bold text-green-700">Rp 0</span>
+                </div>
+            </div>
+
+            <!-- QRIS View -->
+            <div id="view-qris" class="hidden flex flex-col items-center">
+                <img src="https://placehold.co/200x200?text=QRIS+CODE" class="rounded-lg shadow-lg mb-4 border-4 border-white">
+                <p class="text-sm text-slate-500 animate-pulse">Waiting for payment...</p>
+            </div>
+
+            <button onclick="submitOrder()" id="btn-confirm" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg text-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                Complete Order
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/pos.js') }}"></script>
+{% endblock %}

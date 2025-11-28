@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<aside class="w-64 bg-slate-900 text-white flex flex-col">
+    <div class="p-4 text-2xl font-bold bg-slate-800">Admin Panel</div>
+    <nav class="flex-1 p-4 space-y-2">
+        <a href="{{ url_for('admin_dashboard') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-slate-700">Dashboard</a>
+        <a href="{{ url_for('admin_products') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-slate-700">Products</a>
+        <a href="{{ url_for('admin_sales') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-slate-700 bg-slate-700">Sales Report</a>
+    </nav>
+    <div class="p-4 bg-slate-800">
+        <a href="{{ url_for('auth.logout') }}" class="block text-center bg-red-600 py-2 rounded hover:bg-red-700">Logout</a>
+    </div>
+</aside>
+
+<main class="flex-1 p-8 overflow-y-auto">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold">Sales Report</h1>
+        <a href="{{ url_for('export_sales') }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            Export Excel
+        </a>
+    </div>
+
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <table class="min-w-full leading-normal">
+            <thead>
+                <tr>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Transaction Code</th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Payment</th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Total (Rp)</th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                        <p class="text-gray-900 whitespace-no-wrap font-mono">{{ order.transaction_code }}</p>
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                        <p class="text-gray-900 whitespace-no-wrap">{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                        <span class="relative inline-block px-3 py-1 font-semibold text-blue-900 leading-tight">
+                            <span aria-hidden class="absolute inset-0 bg-blue-200 opacity-50 rounded-full"></span>
+                            <span class="relative uppercase text-xs">{{ order.payment_method }}</span>
+                        </span>
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-right">
+                        <p class="text-gray-900 whitespace-no-wrap font-bold">{{ "{:,.0f}".format(order.total_amount).replace(',', '.') }}</p>
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                        {% if order.status == 'paid' %}
+                            <span class="bg-green-200 text-green-900 py-1 px-3 rounded-full text-xs">Paid</span>
+                        {% else %}
+                            <span class="bg-red-200 text-red-900 py-1 px-3 rounded-full text-xs">Void</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                        {% if order.status == 'paid' %}
+                            <button onclick="confirmVoid('{{ order.id }}', '{{ order.transaction_code }}')" class="text-red-600 hover:text-red-900 font-bold">Void</button>
+                        {% else %}
+                            <span class="text-gray-400">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<!-- Void Confirmation Modal -->
+<div id="voidModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg w-full max-w-sm p-6">
+        <h2 class="text-xl font-bold mb-4 text-red-600">Void Transaction</h2>
+        <p class="mb-6">Are you sure you want to void transaction <span id="voidCode" class="font-mono font-bold"></span>? This will restore stock.</p>
+        <div class="flex justify-end gap-3">
+            <button onclick="closeVoidModal()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-800">Cancel</button>
+            <form id="voidForm" method="POST">
+                <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-white font-bold">Confirm Void</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmVoid(id, code) {
+        document.getElementById('voidCode').innerText = code;
+        document.getElementById('voidForm').action = "/admin/sales/void/" + id;
+        document.getElementById('voidModal').classList.remove('hidden');
+    }
+
+    function closeVoidModal() {
+        document.getElementById('voidModal').classList.add('hidden');
+    }
+</script>
+{% endblock %}
