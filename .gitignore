@@ -1,0 +1,16 @@
+# Sampah Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database Lokal (Jangan di-upload)
+*.sqlite
+*.db
+
+# Environment & Logs
+.env
+flask_server.log
+.DS_Store
+
+# Folder Upload Gambar (Opsional, kalau mau upload sample gak papa, tapi biasanya di-ignore)
+# static/uploads/
