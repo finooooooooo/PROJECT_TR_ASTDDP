@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<aside class="w-64 bg-slate-900 text-white flex flex-col">
+    <div class="p-4 text-2xl font-bold bg-slate-800">Admin Panel</div>
+    <nav class="flex-1 p-4 space-y-2">
+        <a href="{{ url_for('admin_dashboard') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-slate-700 {% if request.path == '/admin' %}bg-slate-700{% endif %}">Dashboard</a>
+        <a href="{{ url_for('admin_products') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-slate-700 {% if 'products' in request.path %}bg-slate-700{% endif %}">Products</a>
+        <a href="{{ url_for('admin_sales') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-slate-700 {% if 'sales' in request.path %}bg-slate-700{% endif %}">Sales Report</a>
+    </nav>
+    <div class="p-4 bg-slate-800">
+        <a href="{{ url_for('auth.logout') }}" class="block text-center bg-red-600 py-2 rounded hover:bg-red-700">Logout</a>
+    </div>
+</aside>
+
+<main class="flex-1 p-8 overflow-y-auto">
+    <h1 class="text-3xl font-bold mb-8">Dashboard</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
+            <h3 class="text-gray-500 text-sm font-medium">Daily Sales (Today)</h3>
+            <p class="text-3xl font-bold text-gray-800">Rp {{ "{:,.0f}".format(stats.daily_sales).replace(',', '.') }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
+            <h3 class="text-gray-500 text-sm font-medium">Monthly Sales</h3>
+            <p class="text-3xl font-bold text-gray-800">Rp {{ "{:,.0f}".format(stats.monthly_sales).replace(',', '.') }}</p>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow">
+        <h3 class="text-lg font-bold mb-4">Sales Overview (Last 7 Days)</h3>
+        <canvas id="salesChart" height="100"></canvas>
+    </div>
+</main>
+
+<script>
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    const salesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_labels | tojson }},
+            datasets: [{
+                label: 'Total Sales (Rp)',
+                data: {{ chart_data | tojson }},
+                backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

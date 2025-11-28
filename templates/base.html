@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}POS System{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6', // blue-500
+                        secondary: '#64748b', // slate-500
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans antialiased h-screen overflow-hidden flex flex-col">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div id="flash-container" class="fixed top-4 right-4 z-50">
+                {% for message in messages %}
+                    <div class="bg-blue-600 text-white px-4 py-2 rounded shadow mb-2 animate-bounce">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+            <script>
+                setTimeout(() => {
+                    document.getElementById('flash-container').remove();
+                }, 3000);
+            </script>
+        {% endif %}
+    {% endwith %}
+
+    <div class="flex flex-1 h-full">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
